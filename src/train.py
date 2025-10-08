@@ -2,8 +2,9 @@
 训练与验证循环
 - 中文注释；变量名为英文
 """
-from typing import Tuple, List, Union, Optional
 import copy
+import inspect
+from typing import Tuple, List, Union, Optional
 import torch
 from torch.utils.data import TensorDataset, DataLoader
 from torch import nn
@@ -45,7 +46,11 @@ def train_epochs(model, train_loader, val_loader, epochs: int = 10, lr: float = 
     model.to(device_obj)
     criterion = nn.CrossEntropyLoss(weight=class_weights.to(device_obj) if class_weights is not None else None)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode="min", factor=0.5, patience=2, verbose=True)
+    sched_kwargs = dict(optimizer=optimizer, mode="min", factor=0.5, patience=2)
+    plateau_init = torch.optim.lr_scheduler.ReduceLROnPlateau.__init__
+    if "verbose" in inspect.signature(plateau_init).parameters:
+        sched_kwargs["verbose"] = True
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(**sched_kwargs)
 
     train_loss_hist: List[float] = []
     train_acc_hist: List[float] = []
