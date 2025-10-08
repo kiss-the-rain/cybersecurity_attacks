@@ -5,11 +5,11 @@
 """
 import argparse
 import torch
-from .dataset import load_and_preprocess
-from .model import CyberAttackLSTM
-from .train import build_loaders, train_epochs
-from .evaluate import evaluate_on_test
-from .utils.plotting import plot_curves
+from dataset import load_and_preprocess
+from model import CyberAttackLSTM
+from train import build_loaders, train_epochs
+from evaluate import evaluate_on_test
+from utils.plotting import plot_curves
 
 def parse_args():
     parser = argparse.ArgumentParser(description="LSTM-based Cyber Attack Classification")
