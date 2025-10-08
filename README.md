@@ -39,5 +39,6 @@ python -m src.main --csv_path ./data/cybersecurity_attacks.csv --epochs 10
 - `--embed_dim`: 词向量维度（默认 100）
 - `--hidden_dim`: LSTM 隐藏单元（默认 128）
 - `--lr`: 学习率（默认 1e-3）
+- `--device`: 计算设备（`auto` 会优先选择可用的 CUDA 或 Apple MPS，例如 M3 Pro GPU）
 
 > 注：所有源码中的**注释均为中文**，变量名**均为英文**，满足你的作业要求。

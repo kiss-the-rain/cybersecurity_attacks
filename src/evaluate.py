@@ -2,14 +2,16 @@
 测试集评估
 - 中文注释；变量名为英文
 """
-from typing import List
+from typing import List, Union
 import torch
 from torch.utils.data import TensorDataset, DataLoader
 from sklearn.metrics import classification_report
 
-def evaluate_on_test(model, test_seq, test_static, y_test, batch_size: int = 64, device: str = "cpu", target_names: List[str] = None):
+def evaluate_on_test(model, test_seq, test_static, y_test, batch_size: int = 64,
+                     device: Union[str, torch.device] = "cpu", target_names: List[str] = None):
     """在测试集上进行评估并打印分类报告"""
-    model.to(device)
+    device_obj = torch.device(device) if isinstance(device, str) else device
+    model.to(device_obj)
     test_ds = TensorDataset(
         torch.tensor(test_seq, dtype=torch.long),
         torch.tensor(test_static, dtype=torch.float32),
@@ -21,9 +23,9 @@ def evaluate_on_test(model, test_seq, test_static, y_test, batch_size: int = 64,
     model.eval()
     with torch.no_grad():
         for seq_b, static_b, y_b in test_loader:
-            seq_b = seq_b.to(device)
-            static_b = static_b.to(device)
-            y_b = y_b.to(device)
+            seq_b = seq_b.to(device_obj)
+            static_b = static_b.to(device_obj)
+            y_b = y_b.to(device_obj)
             logits = model(seq_b, static_b)
             preds = logits.argmax(dim=1)
             all_preds.extend(preds.cpu().tolist())
