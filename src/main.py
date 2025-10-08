@@ -20,13 +20,46 @@ def parse_args():
     parser.add_argument("--embed_dim", type=int, default=100, help="词向量维度")
     parser.add_argument("--hidden_dim", type=int, default=128, help="LSTM隐藏单元数")
     parser.add_argument("--lr", type=float, default=1e-3, help="学习率")
-    parser.add_argument("--device", type=str, default="cpu", help="计算设备：cpu/cuda")
+    parser.add_argument("--device", type=str, default="auto", help="计算设备：auto/cpu/cuda/mps")
     parser.add_argument("--save_plot", type=str, default="", help="训练曲线保存路径（为空则直接显示）")
     return parser.parse_args()
 
+def resolve_device(device_arg: str) -> torch.device:
+    """根据用户输入自动解析设备，优先使用 GPU/MPS"""
+    normalized = device_arg.lower()
+
+    def mps_available() -> bool:
+        return hasattr(torch.backends, "mps") and torch.backends.mps.is_available() and torch.backends.mps.is_built()
+
+    if normalized == "auto":
+        if torch.cuda.is_available():
+            return torch.device("cuda")
+        if mps_available():
+            return torch.device("mps")
+        return torch.device("cpu")
+
+    if normalized.startswith("cuda"):
+        if torch.cuda.is_available():
+            return torch.device(device_arg)
+        print("[WARN] CUDA 不可用，回退到 CPU。")
+        return torch.device("cpu")
+
+    if normalized == "mps":
+        if mps_available():
+            return torch.device("mps")
+        print("[WARN] MPS 不可用，回退到 CPU。")
+        return torch.device("cpu")
+
+    if normalized == "cpu":
+        return torch.device("cpu")
+
+    print(f"[WARN] 未识别的 device={device_arg}，回退到 CPU。")
+    return torch.device("cpu")
+
 def main():
     args = parse_args()
-    device = args.device if torch.cuda.is_available() and args.device.startswith("cuda") else "cpu"
+    device = resolve_device(args.device)
+    print(f"[INFO] 使用设备: {device}")
 
     # 1) 加载与预处理
     (train_seq, train_static, y_train,

@@ -2,7 +2,7 @@
 训练与验证循环
 - 中文注释；变量名为英文
 """
-from typing import Tuple, List
+from typing import Tuple, List, Union
 import torch
 from torch.utils.data import TensorDataset, DataLoader
 from torch import nn
@@ -25,9 +25,11 @@ def build_loaders(train_seq, train_static, y_train,
     val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False)
     return train_loader, val_loader
 
-def train_epochs(model, train_loader, val_loader, epochs: int = 10, lr: float = 1e-3, device: str = "cpu"):
+def train_epochs(model, train_loader, val_loader, epochs: int = 10, lr: float = 1e-3,
+                 device: Union[str, torch.device] = "cpu"):
     """训练若干轮并返回历史曲线"""
-    model.to(device)
+    device_obj = torch.device(device) if isinstance(device, str) else device
+    model.to(device_obj)
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
@@ -41,9 +43,9 @@ def train_epochs(model, train_loader, val_loader, epochs: int = 10, lr: float = 
         model.train()
         total_loss, correct, total = 0.0, 0, 0
         for seq_b, static_b, y_b in train_loader:
-            seq_b = seq_b.to(device)
-            static_b = static_b.to(device)
-            y_b = y_b.to(device)
+            seq_b = seq_b.to(device_obj)
+            static_b = static_b.to(device_obj)
+            y_b = y_b.to(device_obj)
 
             optimizer.zero_grad()
             logits = model(seq_b, static_b)
@@ -64,9 +66,9 @@ def train_epochs(model, train_loader, val_loader, epochs: int = 10, lr: float = 
         val_total_loss, val_correct, val_total = 0.0, 0, 0
         with torch.no_grad():
             for seq_b, static_b, y_b in val_loader:
-                seq_b = seq_b.to(device)
-                static_b = static_b.to(device)
-                y_b = y_b.to(device)
+                seq_b = seq_b.to(device_obj)
+                static_b = static_b.to(device_obj)
+                y_b = y_b.to(device_obj)
 
                 logits = model(seq_b, static_b)
                 loss = criterion(logits, y_b)
