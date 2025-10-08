@@ -8,6 +8,7 @@
 import re
 import numpy as np
 import pandas as pd
+from pandas.api.types import is_numeric_dtype
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
@@ -92,14 +93,22 @@ def load_and_preprocess(
     # 7) 类别特征独热编码（如 Protocol、Traffic Type、Action Taken 等）
     cat_cols = [c for c in X_train.columns if X_train[c].dtype == "object"]
     merged_static = pd.get_dummies(pd.concat([X_train, X_val, X_test], ignore_index=True), columns=cat_cols)
+    merged_static = merged_static.fillna(0)
     n_train = len(X_train)
     n_val = len(X_val)
     train_static = merged_static.iloc[:n_train].copy()
     val_static = merged_static.iloc[n_train:n_train+n_val].copy()
     test_static = merged_static.iloc[n_train+n_val:].copy()
 
-    # 8) 数值标准化（示例：Packet Length、Anomaly Scores，如不存在则跳过）
-    num_cols = [c for c in ["Packet Length", "Anomaly Scores"] if c in train_static.columns]
+    # 8) 数值标准化（排除独热后的二值列，仅对连续数值列进行标准化）
+    potential_num_cols = [
+        c for c in merged_static.columns
+        if is_numeric_dtype(merged_static[c])
+    ]
+    num_cols = [
+        c for c in potential_num_cols
+        if merged_static[c].nunique(dropna=False) > 2
+    ]
     scaler = StandardScaler()
     if num_cols:
         train_static[num_cols] = scaler.fit_transform(train_static[num_cols])

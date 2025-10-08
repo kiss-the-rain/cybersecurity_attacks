@@ -39,5 +39,11 @@ python -m src.main --csv_path ./data/cybersecurity_attacks.csv --epochs 10
 - `--embed_dim`: 词向量维度（默认 100）
 - `--hidden_dim`: LSTM 隐藏单元（默认 128）
 - `--lr`: 学习率（默认 1e-3）
+- `--device`: 计算设备（`auto` 会优先选择可用的 CUDA 或 Apple MPS，例如 M3 Pro GPU）
+
+### 训练效果优化
+- 新的双向多层 LSTM + 静态特征子网络，结合 LayerNorm / Dropout，有效提升泛化能力。
+- 训练阶段自动根据训练集类别分布计算权重，对类别不均衡的数据更加友好。
+- 默认启用梯度裁剪、Adam 权重衰减与自动调节学习率（ReduceLROnPlateau），稳定训练并提升最终精度。
 
 > 注：所有源码中的**注释均为中文**，变量名**均为英文**，满足你的作业要求。
